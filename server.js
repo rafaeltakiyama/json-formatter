@@ -6,23 +6,12 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(express.json({ limit: '10mb' }));
-
-// Limpeza de logs do Android/OkHttpClient
-function cleanLogs(rawString) {
-  return rawString
-    .replace(/\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+\s+[\d-]+\s+[^\s]+\s+[A-Z]\s+/g, '')
-    .replace(/\r?\n|\r/g, '');
-}
-
-// Servir os arquivos estáticos da pasta public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Rota Principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// API de processamento
 app.post('/api/process-json', (req, res) => {
   const { jsonString, action } = req.body;
 
@@ -32,14 +21,15 @@ app.post('/api/process-json', (req, res) => {
 
   let isValid = true;
   let parsedJson = null;
-  let cleanedInput = cleanLogs(jsonString);
 
+  // 1. Tenta fazer a análise padrão de um JSON Válido
   try {
-    parsedJson = JSON.parse(cleanedInput);
+    parsedJson = JSON.parse(jsonString);
   } catch (strictError) {
     isValid = false;
+    // 2. Se falhar, tenta recuperar via dirty-json no texto original
     try {
-      parsedJson = djson.parse(cleanedInput);
+      parsedJson = djson.parse(jsonString);
     } catch (fallbackError) {
       parsedJson = null;
     }
@@ -52,7 +42,7 @@ app.post('/api/process-json', (req, res) => {
       ? JSON.stringify(parsedJson) 
       : JSON.stringify(parsedJson, null, 1);
   } else {
-    result = cleanedInput;
+    result = jsonString;
   }
 
   return res.json({ valid: isValid, result });
