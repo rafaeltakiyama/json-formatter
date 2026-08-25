@@ -105,7 +105,7 @@
       }
 
       try {
-        const response = await fetch('/api/process-json', {
+        const response = await fetch('/json-formatter/api/process-json', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ jsonString: input, action: action })

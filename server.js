@@ -6,13 +6,16 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
+// Servir os arquivos estáticos de dentro do caminho /json-formatter
+app.use('/json-formatter', express.static(path.join(__dirname, 'public')));
+
+// Rota para entregar a página
+app.get('/json-formatter', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.post('/api/process-json', (req, res) => {
+app.post('/json-formatter/api/process-json', (req, res) => {
   const { jsonString, action } = req.body;
 
   if (!jsonString || typeof jsonString !== 'string') {
