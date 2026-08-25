@@ -7,22 +7,22 @@ const PORT = process.env.PORT || 8080;
 
 app.use(express.json({ limit: '10mb' }));
 
-// 1. Função de limpeza de logs do Android/OkHttpClient
+// Limpeza de logs do Android
 function cleanLogs(rawString) {
   return rawString
     .replace(/\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+\s+[\d-]+\s+[^\s]+\s+[A-Z]\s+/g, '')
     .replace(/\r?\n|\r/g, '');
 }
 
-// 2. Rota explicita para servir o index.html tanto com barra quanto sem barra no final
+// Servir os arquivos estáticos da pasta public
+app.use('/json-formatter', express.static(path.join(__dirname, 'public')));
+
+// Rota garantida para entregar a página na raiz da subpasta
 app.get(['/json-formatter', '/json-formatter/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// 3. Servir os arquivos estáticos (CSS, JS, etc)
-app.use('/json-formatter', express.static(path.join(__dirname, 'public')));
-
-// 4. Rota da API
+// API de processamento
 app.post('/json-formatter/api/process-json', (req, res) => {
   const { jsonString, action } = req.body;
 
