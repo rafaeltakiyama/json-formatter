@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 8080;
 
 app.use(express.json({ limit: '10mb' }));
 
-// Limpeza de logs do Android
+// Limpeza de logs do Android/OkHttpClient
 function cleanLogs(rawString) {
   return rawString
     .replace(/\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+\s+[\d-]+\s+[^\s]+\s+[A-Z]\s+/g, '')
@@ -15,15 +15,15 @@ function cleanLogs(rawString) {
 }
 
 // Servir os arquivos estáticos da pasta public
-app.use('/json-formatter', express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Rota garantida para entregar a página na raiz da subpasta
-app.get(['/json-formatter', '/json-formatter/'], (req, res) => {
+// Rota Principal
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // API de processamento
-app.post('/json-formatter/api/process-json', (req, res) => {
+app.post('/api/process-json', (req, res) => {
   const { jsonString, action } = req.body;
 
   if (!jsonString || typeof jsonString !== 'string') {
