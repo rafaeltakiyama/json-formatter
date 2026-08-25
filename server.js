@@ -12,48 +12,34 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Função para remover linhas de Log de bibliotecas (OkHttpClient, Logcat, etc)
-function cleanLogs(rawString) {
-  return rawString
-    // Remove linhas de log do Android/OkHttpClient (ex: 2026-08-25 11:56:08.259 ... I 631)
-    .replace(/\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+\s+[\d-]+\s+[^\s]+\s+[A-Z]\s+/g, '')
-    // Remove quebras de linha acidentais causadas pela intercalação de logs
-    .replace(/\r?\n|\r/g, '');
-}
-
 app.post('/api/process-json', (req, res) => {
   const { jsonString, action } = req.body;
 
   if (!jsonString || typeof jsonString !== 'string') {
-    return res.status(400).json({ valid: false, error: 'String não fornecida.' });
+    return res.status(400).json({ valid: false, error: 'String JSON não fornecida.' });
   }
 
   let isValid = true;
   let parsedJson = null;
-  let cleanedInput = cleanLogs(jsonString); // 1. Aplica a limpeza de logs
+  let result = '';
 
-  // 2. Tenta fazer a análise de um JSON rigorosamente Válido
   try {
-    parsedJson = JSON.parse(cleanedInput);
+    parsedJson = JSON.parse(jsonString);
   } catch (strictError) {
     isValid = false;
-    // 3. Se falhar, utiliza o dirty-json no texto higienizado
     try {
-      parsedJson = djson.parse(cleanedInput);
+      parsedJson = djson.parse(jsonString);
     } catch (fallbackError) {
       parsedJson = null;
     }
   }
 
-  let result = '';
-
   if (parsedJson !== null) {
     result = action === 'minify' 
       ? JSON.stringify(parsedJson) 
-      : JSON.stringify(parsedJson, null, 1);
+      : JSON.stringify(parsedJson, null, 1); // 1 espaço para máxima densidade vertical
   } else {
-    // Caso de falha total de parsing
-    result = cleanedInput;
+    result = jsonString;
   }
 
   return res.json({ valid: isValid, result });
