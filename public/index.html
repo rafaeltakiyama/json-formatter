@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formatador e Minificador de JSON</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { padding: 20px; max-width: 1000px; margin: 0 auto; background: #f4f6f8; }
+    h1 { color: #333; }
+    .container { display: flex; flex-direction: column; gap: 15px; }
+    textarea { width: 100%; height: 200px; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-family: monospace; }
+    .actions { display: flex; gap: 10px; }
+    button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    button.primary { background-color: #0086ff; color: white; }
+    button.secondary { background-color: #2e7d32; color: white; }
+    .status { padding: 12px; border-radius: 6px; display: none; font-weight: bold; }
+    .status.success { background-color: #d4edda; color: #155724; display: block; }
+    .status.error { background-color: #f8d7da; color: #721c24; display: block; }
+  </style>
+</head>
+<body>
+
+  <h1>Formatador & Minificador JSON</h1>
+
+  <div class="container">
+    <textarea id="jsonInput" placeholder="Cole seu JSON aqui..."></textarea>
+
+    <div class="actions">
+      <button class="primary" onclick="processJSON('format')">Validar & Formatar</button>
+      <button class="secondary" onclick="processJSON('minify')">Transformar em Linha Única</button>
+    </div>
+
+    <div id="statusMessage" class="status"></div>
+
+    <h3>Resultado:</h3>
+    <textarea id="jsonOutput" readonly placeholder="O resultado aparecerá aqui..."></textarea>
+  </div>
+
+  <script>
+    async function processJSON(action) {
+      const input = document.getElementById('jsonInput').value;
+      const statusDiv = document.getElementById('statusMessage');
+      const outputTextarea = document.getElementById('jsonOutput');
+
+      statusDiv.className = 'status';
+      statusDiv.textContent = '';
+      outputTextarea.value = '';
+
+      if (!input.trim()) {
+        statusDiv.className = 'status error';
+        statusDiv.textContent = 'Por favor, insira um texto JSON.';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/process-json', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jsonString: input, action: action })
+        });
+
+        const data = await response.json();
+
+        if (data.valid) {
+          statusDiv.className = 'status success';
+          statusDiv.textContent = action === 'minify' 
+            ? '✓ JSON Válido e convertido para linha única com sucesso!' 
+            : '✓ JSON Válido e formatado com sucesso!';
+          outputTextarea.value = data.result;
+        } else {
+          statusDiv.className = 'status error';
+          statusDiv.textContent = `✗ ${data.error}`;
+        }
+      } catch (err) {
+        statusDiv.className = 'status error';
+        statusDiv.textContent = 'Erro ao se comunicar com o servidor.';
+      }
+    }
+  </script>
+</body>
+</html>
